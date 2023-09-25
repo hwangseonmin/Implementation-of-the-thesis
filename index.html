@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" type="image/png"
+    href="https://cpwebassets.codepen.io/assets/favicon/apple-touch-icon-5ae1a0698dcc2402e9712f7d01ed509a57814f994c660df9f7a952f3060705ee.png" />
+  <meta name="apple-mobile-web-app-title" content="CodePen">
+  <link rel="shortcut icon" type="image/x-icon"
+    href="https://cpwebassets.codepen.io/assets/favicon/favicon-aec34940fbc1a6e787974dcd360f2c6b63348d4b1f4e06c77743096d55480f33.ico" />
+  <link rel="mask-icon" type="image/x-icon"
+    href="https://cpwebassets.codepen.io/assets/favicon/logo-pin-b4b4269c16397ad2f0f7a01bcdf513a1994f4c94b8af2f191c09eb0d601762b1.svg"
+    color="#111" />
+  <script
+    src="https://cpwebassets.codepen.io/assets/common/stopExecutionOnTimeout-2c7831bb44f98c1391d6a4ffda0e1fd302503391ca806e7fcc7b9b87197aec26.js"></script>
+  <link rel="canonical" href="https://codepen.io/siremilomir/pen/jBbQGo">
+  <link href="https://fonts.googleapis.com/css?family=Open+Sans:300" rel="stylesheet">
+  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet"
+    integrity="sha384-wvfXpqpZZVQGK6TAh5PVlGOfQNHSoD2xbE+QkPxCAFlNEevoEH3Sl0sibVcOQVnN" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css">
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js'></script>
+  <link href="./css/main.css" media="all" rel="Stylesheet" type="text/css" />
+  <script src="./js/main.js"></script>
+  <style>
+    body {
+      background-color: #ffffff;
+  background-image: url('./image/but.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-color: rgba(255, 255, 255, 0.5);
+    }
+    body {
+  background-image: url('./image/but.png');
+
+  /* 꽃잎의 움직임을 제어하는 CSS 속성*/
+  animation: 벚꽃흔들기 1s linear infinite;
+}
+
+@keyframes 벚꽃흔들기 {
+  0% {
+    transform: translate(0, 0);
+  }
+
+  50% {
+    transform: translate(5px, 5px);
+  }
+
+  100% {
+    transform: translate(0, 0);
+  }
+}
+      </style>
+</head>
+
+<body translate="no">
+  <div class="container">
+    <h1 id="haejo" style="text-align: center;
+    color: #ff69b4; 
+    /* 핑크색 */
+    font-size: 36px; 
+    margin: 20px 0 20px;"> 공명 공감
+    </h1>
+    <div class="avatar-upload">
+      <div class="avatar-edit">
+        <input type='file' id="imageUpload" accept=".png, .jpg, .jpeg" />
+        <label for="imageUpload"></label>
+      </div>
+      <div class="avatar-preview">
+        <img id="imagePreview" src="./image/upload.png">
+      </div>
+    </div>
+  </div>
+
+  <script id="rendered-js">
+    function readURL(input) {
+      if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function (e) {
+          $('#imagePreview').attr('src', e.target.result);
+          $('#imagePreview').hide();
+          $('#imagePreview').fadeIn(650);
+        };
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+    $("#imageUpload").change(function () {
+      readURL(this);
+    });
+  </script>
+  <center>
+    <button id="loading-button" class="main_btn" type="button" onclick="init()">예측하기</button>
+    <div id="loading-spinner" class="hidden">
+      <div class="spinner"></div>
+    </div>
+  </center>
+  <div id="webcam-container"></div>
+  <div id="label-container"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+  <script type="text/javascript">
+    const URL = "https://teachablemachine.withgoogle.com/models/VfyBtcLno/";
+    let model, webcam, labelContainer, maxPredictions;
+
+    async function init() {
+      const modelURL = URL + "model.json";
+      const metadataURL = URL + "metadata.json";
+      model = await tmImage.load(modelURL, metadataURL);
+      maxPredictions = model.getTotalClasses();
+      labelContainer = document.getElementById("label-container");
+      for (let i = 0; i < maxPredictions; i++) {
+        labelContainer.appendChild(document.createElement("div"));
+      }
+      predict();
+    }
+    async function predict() {
+      var image = document.getElementById("imagePreview");
+      const prediction = await model.predict(image, false);
+      const redirectButton = document.getElementById("redirectButton");
+
+// 버튼 클릭 이벤트를 정의합니다.
+redirectButton.addEventListener("click", function() {
+  const link = redirectButton.getAttribute("data-link");
+  if (link) {
+    // 버튼의 data-link 속성에 저장된 링크로 이동합니다.
+    window.location.href = link;
+  }
+});
+      for (let i = 0; i < maxPredictions; i++) {
+        const probability = (prediction[i].probability * 100).toFixed(1);
+        const classPrediction = prediction[i].className + ": " + probability + "%";
+        labelContainer.childNodes[i].innerHTML = "<center>" + classPrediction + "</center>";
+
+        // Check if the prediction matches "Male in his 40s".
+        if (prediction[i].className === "40대 남성") {
+          // Load a different YouTube video into the iframe.
+          loadYouTubeVideo("https://www.youtube.com/embed/BzYnNdJhZQw?si=pEm-fi2GzCCNKwa-?autoplay=1&mute=1");
+          redirectButton.style.display = "block";
+        redirectButton.setAttribute("data-link", "read.php?idx=1#");
+      }
+    }
+  }
+
+  // 다음과 같이 버튼 클릭 이벤트를 처리할 수 있습니다.
+  redirectButton.addEventListener("click", function() {
+    const link = redirectButton.getAttribute("data-link");
+    // 여기에서 링크를 사용하거나 다른 작업을 수행할 수 있습니다.
+    // 예: window.location.href = link;
+  });
+  
+    function loadYouTubeVideo(videoUrl) {
+      // Replace the iframe's source with the specified YouTube video URL.
+      const iframe = document.getElementById("youtubeIframe");
+      iframe.src = videoUrl;
+    }
+
+  </script>
+<center>
+  <iframe id="youtubeIframe" width="560" height="315" src="" frameborder="0" allowfullscreen></iframe>
+</center>
+<center><button id="redirectButton" style="display: none;
+  padding: 10px 20px;
+  font-size: 18px;
+  font-weight: bold;
+  background-color: #ff69b4;;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: center;
+  text-decoration: none;
+  transition: background-color 0.3s ease;">공감하기</button>
+</center>
+
+</body>
+
+</html>
